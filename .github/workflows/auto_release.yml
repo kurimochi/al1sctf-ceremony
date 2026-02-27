@@ -5,6 +5,11 @@ on:
     branches: [ main ]
     paths:
       - 'contributions/**'
+  pull_request_target:
+    types: [closed]
+    branches: [ main ]
+    paths:
+      - 'contributions/**'
   workflow_dispatch:
 
 permissions:
@@ -12,6 +17,7 @@ permissions:
 
 jobs:
   auto-release:
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,9 +36,13 @@ jobs:
         id: contrib
         run: |
           # Get the latest merged zkey
-          LATEST_ZKEY=$(find contributions -name "*.zkey" -printf '%T@ %p\n' | sort -r | head -n1 | cut -d' ' -f2-)
+          LATEST_ZKEY=$(find contributions contributes -name "*.zkey" -printf '%T@ %p\n' 2>/dev/null | sort -r | head -n1 | cut -d' ' -f2-)
+          if [ -z "$LATEST_ZKEY" ]; then
+            echo "No zkey file found under contributions/ or contributes/." >&2
+            exit 1
+          fi
           echo "latest_zkey=$LATEST_ZKEY" >> $GITHUB_OUTPUT
-          
+
           # Calculate next version
           LATEST_TAG=$(git describe --tags --abbrev=0 || echo "v0000")
           NEXT_NUM=$(printf "%04d" $((10#${LATEST_TAG:1} + 1)))
