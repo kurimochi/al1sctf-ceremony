@@ -1,0 +1,51 @@
+name: Auto Create Release on Merge
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'contributions/**'
+
+permissions:
+  contents: write
+
+jobs:
+  auto-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Install snarkjs
+        run: npm install -g snarkjs@latest
+
+      - name: Get Latest Contribution
+        id: contrib
+        run: |
+          # Get the latest merged zkey
+          LATEST_ZKEY=$(find contributions -name "*.zkey" -printf '%T@ %p\n' | sort -r | head -n1 | cut -d' ' -f2-)
+          echo "latest_zkey=$LATEST_ZKEY" >> $GITHUB_OUTPUT
+          
+          # Calculate next version
+          LATEST_TAG=$(git describe --tags --abbrev=0 || echo "v0000")
+          NEXT_NUM=$(printf "%04d" $((10#${LATEST_TAG:1} + 1)))
+          echo "next_tag=v$NEXT_NUM" >> $GITHUB_OUTPUT
+
+      - name: Verify Final zkey (safety check)
+        run: snarkjs zkey verify circuit.r1cs powersOfTau28_hez_final_12.ptau ${{ steps.contrib.outputs.latest_zkey }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.contrib.outputs.next_tag }}
+          name: Contribution ${{ steps.contrib.outputs.next_tag }}
+          generate_release_notes: true
+          files: |
+            ${{ steps.contrib.outputs.latest_zkey }}
+          token: ${{ secrets.GITHUB_TOKEN }}
