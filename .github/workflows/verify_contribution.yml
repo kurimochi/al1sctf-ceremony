@@ -99,3 +99,15 @@ jobs:
               repo: context.repo.repo,
               body: '❌ Verification failed.\n\n- Check if you used the **latest** zkey from Releases.\n- Ensure attestation.md includes entropy details and declaration.\n- Logs: https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions'
             })
+
+      - name: Add automerge label on success
+        if: success() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['automerge']
+            })
