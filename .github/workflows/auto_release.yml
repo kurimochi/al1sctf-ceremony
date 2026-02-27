@@ -49,7 +49,7 @@ jobs:
 
             if (!pr.merged) {
               core.setOutput('should_release', 'false')
-              core.setOutput('reason', `pr #${prNumber} is not merged`) 
+              core.setOutput('reason', `pr #${prNumber} is not merged`)
               return
             }
 
@@ -67,7 +67,7 @@ jobs:
             })
 
             const hasContributionChange = files.some((f) =>
-              f.filename.startsWith('contributions/') || f.filename.startsWith('contributes/')
+              f.filename.startsWith('contributions/')
             )
 
             core.setOutput('should_release', hasContributionChange ? 'true' : 'false')
@@ -102,9 +102,9 @@ jobs:
         if: steps.gate.outputs.should_release == 'true'
         run: |
           # Get the latest merged zkey
-          LATEST_ZKEY=$(find contributions contributes -name "*.zkey" -printf '%T@ %p\n' 2>/dev/null | sort -r | head -n1 | cut -d' ' -f2-)
+          LATEST_ZKEY=$(find contributions -name "*.zkey" -printf '%T@ %p\n' 2>/dev/null | sort -r | head -n1 | cut -d' ' -f2-)
           if [ -z "$LATEST_ZKEY" ]; then
-            echo "No zkey file found under contributions/ or contributes/." >&2
+            echo "No zkey file found under contributions/." >&2
             exit 1
           fi
           echo "latest_zkey=$LATEST_ZKEY" >> $GITHUB_OUTPUT
