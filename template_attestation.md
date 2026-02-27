@@ -1,4 +1,4 @@
-# Attestation for [YOUR_CIRCUIT_NAME] Groth16 Phase 2 Trusted Setup Ceremony
+# Attestation for aL1sCTF Groth16 Phase 2 Trusted Setup Ceremony
 
 Fill in all placeholders before submitting.
 
