@@ -20,3 +20,6 @@
 aL1sCTFのPhase 2は、PSEのPowers of Tauをベースに生成されています。
 
 [PSE Powers of Tau (12 powers)](https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_12.ptau)  (4.6MiB)
+
+## 参加方法
+[参加ガイド](CONTRIBUTING_ja.md)をご参照ください。
