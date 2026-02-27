@@ -49,7 +49,7 @@ jobs:
           fi
 
           # integrity check
-          COMPUTED_HASH=$(sha256sum "$PTAU_FILE" | cut -d ' ' -f 1)
+          COMPUTED_HASH=$(b2sum "$PTAU_FILE" | cut -d ' ' -f 1)
           if [ "$COMPUTED_HASH" != "$EXPECTED_HASH" ]; then
             echo "❌ ptau hash mismatch! Expected: $EXPECTED_HASH, Got: $COMPUTED_HASH"
             exit 1
