@@ -2,9 +2,7 @@ name: Verify Contribution
 
 on:
   pull_request:
-    branches: [ main ]
-    paths:
-      - 'contributions/**'
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 permissions:
@@ -64,14 +62,9 @@ jobs:
           # Contribution directory auto-detection from PR diff
           CONTRIB_DIR=$(git diff --name-only origin/${{ github.base_ref }}...${{ github.sha }} | grep -E '^(contributions|contributes)/[^/]+/' | head -n 1 | cut -d/ -f1-2)
 
-          # fallback: first contribution directory
           if [ -z "$CONTRIB_DIR" ]; then
-            CONTRIB_DIR=$(find contributions -mindepth 1 -maxdepth 1 -type d | head -n 1)
-          fi
-
-          if [ -z "$CONTRIB_DIR" ]; then
-            echo "❌ No contribution folder found" >&2
-            exit 1
+            echo "No contribution-related changes detected in this PR. Skipping verification."
+            exit 0
           fi
 
           ZKEY=$(find "$CONTRIB_DIR" -name "*.zkey" | head -n 1)
