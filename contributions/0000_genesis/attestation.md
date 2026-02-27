@@ -29,7 +29,7 @@ With `snarkjs groth16 setup`, entropy is not required, so there's no need to be 
 $ curl -fsSLO https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_12.ptau
 $ b2sum ppot_0080_12.ptau
 3ee85ae13672d1d742117566126f31d678cf72d480f0df8e2aec78d77771433392ae01bb2b11c4ea0e60b244415be0a12a02e51d3f7a4a8b5c1c982fa208c4cd  ppot_0080_12.ptau
-$ snarkjs groth16 setup circuits/flag_verifier.r1cs ppot_0080_12.ptau contributes/0000_genesis/flag_verifier_0000.zkey
+$ snarkjs groth16 setup circuits/flag_verifier.r1cs ppot_0080_12.ptau contributions/0000_genesis/flag_verifier_0000.zkey
 ```
 
 ## Environment
