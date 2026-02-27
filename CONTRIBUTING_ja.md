@@ -64,6 +64,6 @@ gpg --detach-sign --armor attestation.md
 ### Step 5: PR を作成
 
 1. `contrib/00XX` ブランチを作成します。
-2. `flag_verifier_00YY.zkey`, `attestation.md`, `attestation.md.sec` が `contributes/00XX_{あなたの名前}` 配下にあることを確認します。
-3. `contributes/00XX_{あなたの名前}/` 配下の変更をコミットします。
+2. `flag_verifier_00YY.zkey`, `attestation.md`, `attestation.md.asc` が `contributions/00XX_{あなたの名前}/` 配下にあることを確認します。
+3. `contributions/00XX_{あなたの名前}/` 配下の変更をコミットします。
 4. PR を作成します。

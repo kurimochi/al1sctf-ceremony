@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'contributions/**'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -38,7 +39,11 @@ jobs:
           echo "next_tag=v$NEXT_NUM" >> $GITHUB_OUTPUT
 
       - name: Verify Final zkey (safety check)
-        run: snarkjs zkey verify circuit.r1cs powersOfTau28_hez_final_12.ptau ${{ steps.contrib.outputs.latest_zkey }}
+        run: |
+          PTAU_FILE="ppot_0080_12.ptau"
+          PTAU_URL="https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_12.ptau"
+          curl -L -o "$PTAU_FILE" "$PTAU_URL"
+          snarkjs zkey verify circuits/flag_verifier.r1cs "$PTAU_FILE" "${{ steps.contrib.outputs.latest_zkey }}"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
