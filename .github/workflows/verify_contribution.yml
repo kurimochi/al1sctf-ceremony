@@ -1,0 +1,100 @@
+name: Verify Contribution
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'contributions/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository with LFS
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install snarkjs
+        run: npm install -g snarkjs@latest
+
+      - name: Cache Phase 1 ptau file
+        id: cache-ptau
+        uses: actions/cache@v4
+        with:
+          path: powersOfTau28_hez_final_12.ptau
+          key: ${{ runner.os }}-ptau-pse-12-${{ hashFiles('circuits/flag_verifier.r1cs') }}
+          restore-keys: |
+            ${{ runner.os }}-ptau-pse-12-
+
+      - name: Download Phase 1 ptau file
+        if: steps.cache-ptau.outputs.cache-hit != 'true'
+        run: |
+          PTAU_FILE="ppot_0080_12.ptau"
+          PTAU_URL="https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_12.ptau"
+          EXPECTED_HASH="3ee85ae13672d1d742117566126f31d678cf72d480f0df8e2aec78d77771433392ae01bb2b11c4ea0e60b244415be0a12a02e51d3f7a4a8b5c1c982fa208c4cd"
+
+          if [ ! -f "$PTAU_FILE" ]; then
+            echo "Downloading ptau from $PTAU_URL ..."
+            curl -L -o "$PTAU_FILE" "$PTAU_URL"
+          fi
+
+          # integrity check
+          COMPUTED_HASH=$(sha256sum "$PTAU_FILE" | cut -d ' ' -f 1)
+          if [ "$COMPUTED_HASH" != "$EXPECTED_HASH" ]; then
+            echo "❌ ptau hash mismatch! Expected: $EXPECTED_HASH, Got: $COMPUTED_HASH"
+            exit 1
+          fi
+          echo "✅ ptau verified (BLAKE2b OK)"
+
+      - name: Verify Contribution
+        id: verify
+        run: |
+          # contribution directory auto-detection (added via PR)
+          CONTRIB_DIR=$(find contributions -mindepth 1 -maxdepth 1 -type d | head -n 1)
+          if [ -z "$CONTRIB_DIR" ]; then
+            echo "❌ No contribution folder found" >&2
+            exit 1
+          fi
+
+          ZKEY=$(find "$CONTRIB_DIR" -name "*.zkey" | head -n 1)
+          ATTESTATION="$CONTRIB_DIR/attestation.md"
+
+          echo "Verifying zkey: $ZKEY"
+
+          # snarkjs verify
+          snarkjs zkey verify circuit.r1cs powersOfTau28_hez_final_12.ptau "$ZKEY"
+
+          # attestation check
+          if [ ! -f "$ATTESTATION" ]; then
+            echo "❌ attestation.md missing" >&2
+            exit 1
+          fi
+          if ! grep -qi "entropy" "$ATTESTATION" || ! grep -qi "declaration" "$ATTESTATION"; then
+            echo "❌ attestation.md incomplete (missing entropy or declaration)" >&2
+            exit 1
+          fi
+
+          echo "✅ All verifications passed!"
+        continue-on-error: false
+
+      - name: Comment on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ Verification failed.\n\n- Check if you used the **latest** zkey from Releases.\n- Ensure attestation.md includes entropy details and declaration.\n- Logs: https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions'
+            })
